@@ -52,7 +52,7 @@ def get_one(emp_id : int, db : Session = Depends(get_db)):
 def create_employees(emp: EmployeeSchema,db : Session = Depends(get_db)):
     employee = db.query(Employee).filter(id= emp.id).first()
     if employee is not None:
-        raise HTTPException(status_code=400, detail="Email already exists")
+        raise HTTPException(status_code=404, detail="Employee not found")
     new_employee = Employee(**emp.model_dump(exclude={"id"}))
     db.add(new_employee)
     db.commit()
