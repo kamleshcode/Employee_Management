@@ -5,42 +5,26 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-db_url = os.getenv("DATABASE_CONN_URL")
-if not db_url:
-    print("Error: DATABASE_URL not found in .env file!")
-pool_size = int(os.getenv("DB_POOL_SIZE", 5))
-max_overflow = int(os.getenv("DB_MAX_OVERFLOW", 10))
+class DatabaseManager:
+    def __init__(self):
+        self.DATABASE_URL = os.getenv("DATABASE_CONN_URL")
+        if not self.DATABASE_URL:
+            raise ValueError("DB_URL environment variable not set.")
 
-engine = None
-Session = None
+        self.engine = create_engine(self.DATABASE_URL,echo=True)
+        self.SessionLocal = sessionmaker(bind=self.engine)
+        self.Base = declarative_base()
 
-try:
-    engine = create_engine(db_url,
-                           pool_size=pool_size,
-                           max_overflow=max_overflow,
-                           pool_timeout=30,
-                           echo=True)
-    Session = sessionmaker(bind=engine)
-    print("Database engine initialized successfully.....")
-except Exception as e:
-    print(f"Error initializing the database engine: {e}")
+    def get_db(self):
+        db = self.SessionLocal()
+        try:
+            yield db
+        finally:
+            db.close()
 
-Base = declarative_base()
-
-# Employee Model
-class Employee(Base):
-    __tablename__ = 'Employee'
-    id = Column(Integer, primary_key=True)
-    name = Column(String(50))
-    email = Column(String(50), unique=True)
-    department = Column(String(50))
-    salary = Column(Float)
-    phoneNumber = Column(String(20))
-    isActive = Column(Boolean)
-
-Base.metadata.create_all(engine)
-
-
-
-
+db_manager = DatabaseManager()
+engine = db_manager.engine
+SessionLocal = db_manager.SessionLocal
+Base = db_manager.Base
+get_db=db_manager.get_db
 
