@@ -73,9 +73,9 @@ def update_employee(emp_id : int, emp: EmployeeSchema,db : Session = Depends(get
     employee = db.query(Employee).filter_by(id=emp_id).first()
     if not employee:
         raise HTTPException(status_code=404, detail="Employee not found")
-    updates_data = emp.model_dump(exclude_unset=True,exclude={"id"})
+    updates_data = emp.model_dump(exclude_unset=False,exclude={"id"})
     for key, value in updates_data.items():
-        setattr(employee, key, value)
+        setattr(employee, key, value) # setattr(object,name,value) ->object.name = "value"
         db.commit()
         db.refresh(employee)
         return employee
